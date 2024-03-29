@@ -66,8 +66,9 @@ if __name__ == '__main__':
         finals = []
         pc = [np.zeros(len(train[0]),)]
         count = 0
+        labels = []
         for line in lines:
-
+            labels.append(line)
             if(line != currentLine):
                 currentLine = line
                 #normalize, push, and reset pc holder
@@ -84,5 +85,35 @@ if __name__ == '__main__':
 
 
         #BUILDING THE CLASSIFIER
-        pc = norms
+
+        pc = np.array(norms).reshape(20, 292)[1:]
         wc = np.log(pc)
+
+        counts = np.bincount(labels)
+        counts = counts[1:-1]
+        cp = counts / len(labels)
+        #print(cp)
+
+        bc = np.log(cp)
+        #NOW WE HAVE PC, WC, AND BC, so we can form our classifier
+
+        scores = train.dot(wc.T) + bc
+        scores = np.nan_to_num(scores, nan=0)
+        pred = np.argmax((-1)*scores, axis=1)
+        #print(scores)
+        #print(pred)
+
+        labels.append(0)
+        #accuracy = (pred == np.array(labels))
+        #print(accuracy)
+
+        ## TFIDF STUFF- should return 292xdocument number length vector
+
+        '''
+        loop thru all columns
+        check column count how many times value is nonzero (y), then take idf = log(total docs/y)
+        then check document specific stats and crunch those numbers and append the value
+        '''
+
+        for i in range(0, len(train)):
+            print(float(np.count_nonzero(train[:][i]))/float(len(train[:][i])))
