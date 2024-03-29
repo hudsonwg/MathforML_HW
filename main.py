@@ -1,6 +1,8 @@
 import numpy as np
 from scipy.sparse import csr_matrix
-
+import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
+from sklearn.mixture import GaussianMixture
 
 def get_dense(path, path2):
     with open(path, 'r') as file:
@@ -114,6 +116,66 @@ if __name__ == '__main__':
         check column count how many times value is nonzero (y), then take idf = log(total docs/y)
         then check document specific stats and crunch those numbers and append the value
         '''
+        TFIDF = np.zeros(train.shape)
+        for i in range(0, len(train[0])):
+            y = float(np.count_nonzero(train[:][i]))
+            if y==0:
 
-        for i in range(0, len(train)):
-            print(float(np.count_nonzero(train[:][i]))/float(len(train[:][i])))
+                y=1
+            idf = np.log(float(len(train[:][i])/y))
+            for j in range(0, len(train)):
+                a = train[j][i]
+                b = np.sum(train[j])
+                if(a == 0):
+                    TFIDF[j][i] = 0
+                else:
+                    TFIDF[j][i] = (a/b)*idf
+        #print(TFIDF)
+        U, S, Vt = np.linalg.svd(TFIDF)
+        #print(U)
+        #print(S)
+        #print(Vt)
+
+        k = 2
+        U_pca = U[:, :k]
+        S_pca = np.diag(S[:k])
+        Vt_pca = Vt[:k, :]
+
+        # Compute PCA by multiplying matrices
+        Y = np.dot(U_pca, S_pca)
+        print(Y)
+        x_coords = Y[:, 0]
+        y_coords = Y[:, 1]
+
+        # Plot the vectors using plt.scatter()
+        #plt.figure(figsize=(8, 6))
+        #plt.scatter(x_coords, y_coords)
+        #plt.xlabel('X-axis')
+        #plt.ylabel('Y-axis')
+        #plt.title('Plot of Y after PCA on TFIDF')
+        #plt.grid(True)
+        #plt.show()
+
+
+        #6
+
+        kGMM = 20  # Number of clusters
+        initial_means = ...
+        initial_covariances = ...
+        initial_mixing_coeffs = ...
+
+        # Step 3: Expectation-Maximization (EM) Algorithm
+        gmm = GaussianMixture(n_components=kGMM, init_params='random', random_state=42)
+        gmm.means_init = initial_means
+        gmm.covariances_init = initial_covariances
+        gmm.weights_init = initial_mixing_coeffs
+        gmm.fit(TFIDF)  # data matrix obtained from LSI
+
+        # Compute PCA projection Θ
+        pca = PCA(n_components=kGMM)
+        Theta = pca.fit_transform(TFIDF)
+
+        # Compute Θμc for each cluster
+        Theta_means = np.dot(gmm.means_, pca.components_)
+
+        ####
